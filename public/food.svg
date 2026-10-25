@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
+  <rect width="800" height="400" fill="#FBF2E9"/>
+  <!-- plate -->
+  <ellipse cx="400" cy="258" rx="250" ry="72" fill="#EADFCC"/>
+  <ellipse cx="400" cy="248" rx="216" ry="58" fill="#F8EFE0"/>
+  <!-- burrito -->
+  <g transform="rotate(-12 400 218)">
+    <rect x="268" y="168" width="264" height="112" rx="56" fill="#F1C478"/>
+    <rect x="288" y="184" width="224" height="82" rx="41" fill="#F9E2AE"/>
+    <path d="M304 192l12 66M334 188l12 68M364 186l12 70M394 185l12 70M424 186l12 69M454 188l12 68M484 193l12 65"
+      stroke="#E5B45C" stroke-width="9" stroke-linecap="round" fill="none"/>
+    <ellipse cx="298" cy="224" rx="26" ry="36" fill="#E5C067"/>
+    <ellipse cx="502" cy="224" rx="24" ry="34" fill="#E5C067"/>
+  </g>
+  <!-- garnish -->
+  <circle cx="252" cy="288" r="10" fill="#D96A4B"/>
+  <circle cx="238" cy="302" r="6" fill="#7FA05B"/>
+  <circle cx="546" cy="272" r="9" fill="#D96A4B"/>
+  <circle cx="568" cy="288" r="6" fill="#7FA05B"/>
+  <circle cx="420" cy="316" r="5" fill="#7FA05B"/>
+</svg>

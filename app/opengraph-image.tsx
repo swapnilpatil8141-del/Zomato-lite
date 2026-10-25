@@ -2,8 +2,7 @@
 // is pasted. Rendered by Next at deploy time into a real 1200x630 PNG.
 import { ImageResponse } from "next/og";
 
-export const alt = "Zomato Lite — Ludhiana Burrito, reviewed honestly";
-export const size = { width: 1200, height: 630 };
+export const alt = "Zomato Lite — Ludhiana Burrito, reviewed honestly";export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default function OpengraphImage() {
@@ -27,7 +26,7 @@ export default function OpengraphImage() {
             display: "flex",
             fontSize: 22,
             letterSpacing: "0.28em",
-            color: "#B45309",
+            color: "#C42B37",
             fontWeight: 700,
           }}
         >
@@ -66,7 +65,7 @@ export default function OpengraphImage() {
                 width="40"
                 height="40"
                 viewBox="0 0 24 24"
-                fill="#D97706"
+                fill="#E23744"
               >
                 <path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.2l7.1-.6z" />
               </svg>

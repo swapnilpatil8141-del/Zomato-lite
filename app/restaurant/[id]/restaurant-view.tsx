@@ -2,10 +2,12 @@
 
 // The interactive part of the restaurant screen.
 // It calls GET /api/restaurants/[id] and renders what it receives.
-// There is NO adding, NO dividing, NO sorting in this file. It renders.
+// Numbers arrive ready from the backend (AVG, COUNT, ORDER BY); this file
+// only presents them. No business logic moved in — see app/components/rating-ui.tsx.
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Kicker, ReviewerBadge, Stars, ratingLabel, ratingTone } from "../../components/rating-ui";
 
 type Review = {
   id: number;
@@ -18,28 +20,61 @@ type RestaurantPayload = {
   name: string;
   cuisine: string;
   area: string;
-  averageRating: number | null; // computed by the backend: AVG(rating)
-  totalReviews: number; // computed by the backend: COUNT(*)
-  latestReview: Review | null; // computed by the backend: newest, take one
-  reviews: Review[]; // every other review, newest first
+  averageRating: number | null;
+  totalReviews: number;
+  latestReview: Review | null;
+  reviews: Review[];
 };
-
-// Pure display helper: turn a given rating into stars. The rating arrived as a
-// number from the API; we only draw it.
-function Stars({ value, className }: { value: number; className?: string }) {
-  return (
-    <span className={className}>
-      <span>{"★".repeat(value)}</span>
-      <span className="text-stone-300">{"★".repeat(5 - value)}</span>
-    </span>
-  );
-}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
   });
+}
+
+function ReviewCard({
+  review,
+  latest = false,
+}: {
+  review: Review;
+  latest?: boolean;
+}) {
+  return (
+    <article
+      className={`rounded-2xl border p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-6 ${
+        latest
+          ? "border-red-100 bg-red-50/50"
+          : "border-stone-200/70 bg-white shadow-sm"
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <ReviewerBadge className={latest ? "border-red-100 bg-white" : ""} />
+        <div className="min-w-0 flex-1">
+          {/* No reviewer name exists in our data — that's an honest label. */}
+          <p className="text-sm font-semibold text-stone-900">Guest reviewer</p>
+          <time className="text-xs text-stone-400">{formatDate(review.createdAt)}</time>
+        </div>
+        {latest && (
+          <span className="rounded-full bg-[#C42B37] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white">
+            Latest
+          </span>
+        )}
+      </div>
+      <p
+        className={`mt-3 leading-relaxed text-stone-800 ${
+          latest ? "text-base sm:text-lg" : "text-[15px]"
+        }`}
+      >
+        {review.comment}
+      </p>
+      <div className="mt-3 flex items-center gap-2.5">
+        <Stars value={review.rating} />
+        <span className="text-stone-300">·</span>
+        <span className="text-xs text-stone-400">{review.rating}/5</span>
+      </div>
+    </article>
+  );
 }
 
 export default function RestaurantView({
@@ -68,13 +103,13 @@ export default function RestaurantView({
     };
   }, [restaurantId]);
 
-  const container = "mx-auto w-full max-w-[600px] px-6 pb-16 pt-14";
+  const container = "mx-auto w-full max-w-[600px] px-4 pb-24 pt-8 sm:px-6 sm:pt-10";
 
   if (notFound) {
     return (
       <main className={container}>
-        <div className="rounded-2xl border border-dashed border-stone-300 p-10 text-center">
-          <p className="font-medium text-stone-900">Nothing at this address.</p>
+        <div className="rounded-3xl border border-dashed border-stone-300 p-10 text-center">
+          <p className="font-semibold text-stone-900">Nothing at this address.</p>
           <p className="mt-1 text-sm text-stone-500">
             This restaurant does not exist. Check the number in the URL.
           </p>
@@ -86,108 +121,112 @@ export default function RestaurantView({
   if (!data) {
     return (
       <main className={container}>
-        <p className="animate-pulse text-sm text-stone-400">Loading…</p>
+        <div className="space-y-4" role="status" aria-label="Loading">
+          <div className="h-44 animate-pulse rounded-3xl bg-stone-100" />
+          <div className="h-32 animate-pulse rounded-3xl bg-stone-100" />
+          <div className="h-24 animate-pulse rounded-2xl bg-stone-100" />
+        </div>
       </main>
     );
   }
 
+  const avg = data.averageRating;
+  const label = avg !== null ? ratingLabel(avg) : null;
+  const tone = avg !== null ? ratingTone(avg) : null;
+
   return (
     <main className={container}>
-      <header>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-700">
-          Ludhiana Burrito — Zomato Lite
-        </p>
-        <h1 className="mt-3 text-[34px] font-semibold leading-tight tracking-tight text-stone-900">
-          {data.name}
-        </h1>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <span className="rounded-full border border-stone-200 bg-white px-3 py-1 text-xs font-medium text-stone-600">
-            {data.cuisine}
-          </span>
-          <span className="rounded-full border border-stone-200 bg-white px-3 py-1 text-xs font-medium text-stone-600">
-            {data.area}
+      {/* Header: image + identity */}
+      <section className="overflow-hidden rounded-3xl border border-stone-200/70 bg-white shadow-sm">
+        <div className="relative h-40 sm:h-52">
+          <img
+            src="/food.svg"
+            alt="Illustration of a freshly made burrito on a plate"
+            className="size-full object-cover"
+          />
+          <span className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C42B37] shadow-sm">
+            Zomato Lite
           </span>
         </div>
-      </header>
+        <div className="p-5 sm:p-7">
+          <h1 className="text-2xl font-bold tracking-tight text-stone-900 sm:text-[34px]">
+            {data.name}
+          </h1>
+          <p className="mt-2 text-sm text-stone-500 sm:text-[15px]">
+            {data.cuisine} · {data.area}
+          </p>
+        </div>
+      </section>
 
       {data.totalReviews === 0 ? (
-        // Empty state: no facts exist yet, so there is no rating to print.
-        // "No rating yet" is not "0 stars" — that distinction is in the API.
-        <div className="mt-12 rounded-2xl border border-dashed border-stone-300 p-10 text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-400">
-            First review pending
-          </p>
-          <p className="mt-3 text-stone-900">
+        <div className="mt-8 rounded-3xl border border-dashed border-stone-300 p-10 text-center">
+          <Kicker className="text-stone-400">First review pending</Kicker>
+          <p className="mt-3 font-medium text-stone-900">
             Nobody has reviewed {data.name} yet.
           </p>
           <p className="mt-1 text-sm text-stone-500">
-            Be the first to say how it was.
+            Your words would set the tone for everyone after you.
           </p>
           <Link
             href={`/review/${restaurantId}`}
-            className="mt-6 inline-block rounded-xl bg-amber-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-amber-800"
+            className="mt-6 inline-block rounded-xl bg-[#E23744] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#C42B37]"
           >
             Write the first review
           </Link>
         </div>
       ) : (
         <>
-          {/* The average, printed exactly as the backend computed it. */}
-          <section className="mt-12 border-b border-stone-200 pb-10">
-            <div className="flex items-end justify-between">
-              <div>
-                <span className="text-[72px] font-bold leading-none tracking-tight text-stone-900">
+          {/* Rating summary card */}
+          <section className="mt-6 rounded-3xl border border-stone-200/70 bg-white p-5 shadow-sm sm:p-7">
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-stone-400">
+              Overall rating
+            </p>
+            <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
+              <div className="flex items-center gap-4">
+                {/* Printed exactly as computed by AVG(rating) on the backend. */}
+                <span
+                  className={`text-[64px] font-bold leading-none tracking-tight sm:text-7xl ${
+                    tone ? tone.text : "text-stone-900"
+                  }`}
+                >
                   {data.averageRating}
                 </span>
-                <p className="mt-3 text-sm text-stone-500">
-                  average across {data.totalReviews}{" "}
-                  {data.totalReviews === 1 ? "review" : "reviews"}
-                </p>
+                <div className="pb-1.5">
+                  <Stars value={data.averageRating ?? 0} size="lg" />
+                  <p className="mt-1.5 text-sm text-stone-500">
+                    based on {data.totalReviews}{" "}
+                    {data.totalReviews === 1 ? "review" : "reviews"}
+                  </p>
+                </div>
               </div>
-              <span className="text-5xl text-amber-500" aria-hidden="true">
-                ★
-              </span>
+              {label && tone && (
+                <span
+                  className={`rounded-full border px-4 py-2 text-sm font-semibold ${tone.chip}`}
+                >
+                  {label}
+                </span>
+              )}
             </div>
           </section>
 
+          {/* Latest review */}
           {data.latestReview && (
-            <section className="mt-10">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-400">
-                Latest
-              </p>
-              <figure className="mt-4 rounded-2xl border border-amber-200/70 bg-amber-50/60 p-7">
-                <blockquote className="text-lg leading-relaxed text-stone-900">
-                  “{data.latestReview.comment}”
-                </blockquote>
-                <figcaption className="mt-5 flex items-center gap-2.5 text-sm">
-                  <Stars value={data.latestReview.rating} className="text-amber-600" />
-                  <span className="text-stone-300">·</span>
-                  <time className="text-stone-500">
-                    {formatDate(data.latestReview.createdAt)}
-                  </time>
-                </figcaption>
-              </figure>
+            <section className="mt-8">
+              <Kicker>Latest review</Kicker>
+              <div className="mt-3">
+                <ReviewCard review={data.latestReview} latest />
+              </div>
             </section>
           )}
 
+          {/* Earlier reviews */}
           {data.reviews.length > 0 && (
-            <section className="mt-12">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-400">
-                Earlier reviews
-              </p>
-              <ul className="mt-2 divide-y divide-stone-100">
+            <section className="mt-8">
+              <Kicker className="text-stone-400">Earlier reviews</Kicker>
+              <ul className="mt-3 space-y-3">
                 {data.reviews.map((review) => (
-                  <li key={review.id} className="py-5">
-                    <p className="text-[15px] leading-relaxed text-stone-800">
-                      {review.comment}
-                    </p>
-                    <p className="mt-2 flex items-center gap-2.5 text-sm">
-                      <Stars value={review.rating} className="text-amber-600" />
-                      <span className="text-stone-300">·</span>
-                      <time className="text-[13px] text-stone-500">
-                        {formatDate(review.createdAt)}
-                      </time>
-                    </p>
+                  <li key={review.id}>
+                    <ReviewCard review={review} />
                   </li>
                 ))}
               </ul>
@@ -196,17 +235,21 @@ export default function RestaurantView({
         </>
       )}
 
-      <footer className="mt-14 flex items-center justify-between gap-6 border-t border-stone-200 pt-8">
+      {/* CTA */}
+      <div className="mt-10 border-t border-stone-100 pt-8">
         <Link
           href={`/review/${restaurantId}`}
-          className="rounded-xl bg-amber-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-amber-800"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#E23744] px-6 py-4 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:bg-[#C42B37] active:scale-[0.99]"
         >
-          Write a review →
+          Write a review
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
         </Link>
-        <p className="text-[11px] uppercase tracking-[0.2em] text-stone-400">
+        <p className="mt-6 text-center text-[10px] uppercase tracking-[0.2em] text-stone-400">
           Next.js · Neon · Vercel
         </p>
-      </footer>
+      </div>
     </main>
   );
 }
