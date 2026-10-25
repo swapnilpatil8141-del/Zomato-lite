@@ -59,8 +59,18 @@ export default function OpengraphImage() {
             paddingTop: 32,
           }}
         >
-          <div style={{ display: "flex", fontSize: 34, color: "#D97706" }}>
-            ★★★★★
+          <div style={{ display: "flex", gap: 6 }}>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <svg
+                key={n}
+                width="40"
+                height="40"
+                viewBox="0 0 24 24"
+                fill="#D97706"
+              >
+                <path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.2l7.1-.6z" />
+              </svg>
+            ))}
           </div>
           <div
             style={{
