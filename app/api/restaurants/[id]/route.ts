@@ -60,11 +60,11 @@ export async function GET(
       ? null
       : Math.round(Number(stats.average_rating) * 10) / 10;
 
-  const shapeReview = (r: { id: number; rating: number; comment: string; created_at: Date }) => ({
-    id: r.id,
-    rating: r.rating,
-    comment: r.comment,
-    createdAt: r.created_at.toISOString(),
+  const toApiReview = (row: Record<string, unknown>) => ({
+    id: Number(row.id),
+    rating: Number(row.rating),
+    comment: String(row.comment),
+    createdAt: new Date(row.created_at as string | Date).toISOString(),
   });
 
   return Response.json({
@@ -73,7 +73,7 @@ export async function GET(
     area: restaurant.area,
     averageRating,
     totalReviews,
-    latestReview: latest ? shapeReview(latest) : null,
-    reviews: olderReviews.map(shapeReview),
+    latestReview: latest ? toApiReview(latest) : null,
+    reviews: olderReviews.map((row) => toApiReview(row)),
   });
 }
