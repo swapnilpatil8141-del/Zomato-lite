@@ -24,8 +24,8 @@ type RestaurantPayload = {
   reviews: Review[]; // every other review, newest first
 };
 
-// Pure display helper: turn a given rating into stars. No maths — the rating
-// arrived as a number from the API; we only draw it.
+// Pure display helper: turn a given rating into stars. The rating arrived as a
+// number from the API; we only draw it.
 function Stars({ value, className }: { value: number; className?: string }) {
   return (
     <span className={className}>
@@ -68,14 +68,17 @@ export default function RestaurantView({
     };
   }, [restaurantId]);
 
-  const container = "mx-auto w-full max-w-[560px] px-6 py-12";
+  const container = "mx-auto w-full max-w-[600px] px-6 pb-16 pt-14";
 
   if (notFound) {
     return (
       <main className={container}>
-        <p className="text-stone-500">
-          This restaurant does not exist. Check the address in the URL.
-        </p>
+        <div className="rounded-2xl border border-dashed border-stone-300 p-10 text-center">
+          <p className="font-medium text-stone-900">Nothing at this address.</p>
+          <p className="mt-1 text-sm text-stone-500">
+            This restaurant does not exist. Check the number in the URL.
+          </p>
+        </div>
       </main>
     );
   }
@@ -83,31 +86,46 @@ export default function RestaurantView({
   if (!data) {
     return (
       <main className={container}>
-        <p className="text-stone-400">Loading…</p>
+        <p className="animate-pulse text-sm text-stone-400">Loading…</p>
       </main>
     );
   }
 
   return (
     <main className={container}>
-      <h1 className="text-2xl font-semibold tracking-tight text-stone-900">
-        {data.name}
-      </h1>
-      <p className="mt-1 text-sm text-stone-500">
-        {data.cuisine} · {data.area}
-      </p>
+      <header>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-700">
+          Ludhiana Burrito — Zomato Lite
+        </p>
+        <h1 className="mt-3 text-[34px] font-semibold leading-tight tracking-tight text-stone-900">
+          {data.name}
+        </h1>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span className="rounded-full border border-stone-200 bg-white px-3 py-1 text-xs font-medium text-stone-600">
+            {data.cuisine}
+          </span>
+          <span className="rounded-full border border-stone-200 bg-white px-3 py-1 text-xs font-medium text-stone-600">
+            {data.area}
+          </span>
+        </div>
+      </header>
 
       {data.totalReviews === 0 ? (
         // Empty state: no facts exist yet, so there is no rating to print.
         // "No rating yet" is not "0 stars" — that distinction is in the API.
-        <div className="mt-12 rounded-xl border border-stone-200 p-8 text-center">
-          <p className="text-stone-900">No reviews of {data.name} yet.</p>
+        <div className="mt-12 rounded-2xl border border-dashed border-stone-300 p-10 text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-400">
+            First review pending
+          </p>
+          <p className="mt-3 text-stone-900">
+            Nobody has reviewed {data.name} yet.
+          </p>
           <p className="mt-1 text-sm text-stone-500">
             Be the first to say how it was.
           </p>
           <Link
             href={`/review/${restaurantId}`}
-            className="mt-6 inline-block rounded-lg bg-amber-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-amber-800"
+            className="mt-6 inline-block rounded-xl bg-amber-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-amber-800"
           >
             Write the first review
           </Link>
@@ -115,57 +133,80 @@ export default function RestaurantView({
       ) : (
         <>
           {/* The average, printed exactly as the backend computed it. */}
-          <div className="mt-10 flex items-baseline gap-3">
-            <span className="text-6xl font-bold tracking-tight text-stone-900">
-              {data.averageRating}
-            </span>
-            <span className="text-sm text-stone-500">
-              {data.totalReviews}{" "}
-              {data.totalReviews === 1 ? "review" : "reviews"}
-            </span>
-          </div>
+          <section className="mt-12 border-b border-stone-200 pb-10">
+            <div className="flex items-end justify-between">
+              <div>
+                <span className="text-[72px] font-bold leading-none tracking-tight text-stone-900">
+                  {data.averageRating}
+                </span>
+                <p className="mt-3 text-sm text-stone-500">
+                  average across {data.totalReviews}{" "}
+                  {data.totalReviews === 1 ? "review" : "reviews"}
+                </p>
+              </div>
+              <span className="text-5xl text-amber-500" aria-hidden="true">
+                ★
+              </span>
+            </div>
+          </section>
+
           {data.latestReview && (
-            <div className="mt-10 rounded-xl border border-amber-200 bg-amber-50/60 p-6">
-              <p className="text-xs font-medium uppercase tracking-widest text-amber-700">
+            <section className="mt-10">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-400">
                 Latest
               </p>
-              <p className="mt-3 text-stone-900">{data.latestReview.comment}</p>
-              <p className="mt-3 text-sm text-stone-500">
-                <Stars value={data.latestReview.rating} className="text-amber-600" />
-                <span className="ml-2">{formatDate(data.latestReview.createdAt)}</span>
-              </p>
-            </div>
+              <figure className="mt-4 rounded-2xl border border-amber-200/70 bg-amber-50/60 p-7">
+                <blockquote className="text-lg leading-relaxed text-stone-900">
+                  “{data.latestReview.comment}”
+                </blockquote>
+                <figcaption className="mt-5 flex items-center gap-2.5 text-sm">
+                  <Stars value={data.latestReview.rating} className="text-amber-600" />
+                  <span className="text-stone-300">·</span>
+                  <time className="text-stone-500">
+                    {formatDate(data.latestReview.createdAt)}
+                  </time>
+                </figcaption>
+              </figure>
+            </section>
           )}
 
           {data.reviews.length > 0 && (
-            <>
-              <h2 className="mt-12 text-xs font-medium uppercase tracking-widest text-stone-400">
+            <section className="mt-12">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-400">
                 Earlier reviews
-              </h2>
-              <ul className="mt-4 divide-y divide-stone-200">
+              </p>
+              <ul className="mt-2 divide-y divide-stone-100">
                 {data.reviews.map((review) => (
                   <li key={review.id} className="py-5">
-                    <p className="text-stone-900">{review.comment}</p>
-                    <p className="mt-2 text-sm text-stone-500">
+                    <p className="text-[15px] leading-relaxed text-stone-800">
+                      {review.comment}
+                    </p>
+                    <p className="mt-2 flex items-center gap-2.5 text-sm">
                       <Stars value={review.rating} className="text-amber-600" />
-                      <span className="ml-2">{formatDate(review.createdAt)}</span>
+                      <span className="text-stone-300">·</span>
+                      <time className="text-[13px] text-stone-500">
+                        {formatDate(review.createdAt)}
+                      </time>
                     </p>
                   </li>
                 ))}
               </ul>
-            </>
+            </section>
           )}
         </>
       )}
 
-      <div className="mt-12 border-t border-stone-200 pt-8">
+      <footer className="mt-14 flex items-center justify-between gap-6 border-t border-stone-200 pt-8">
         <Link
           href={`/review/${restaurantId}`}
-          className="inline-block rounded-lg border border-stone-300 px-5 py-2.5 text-sm font-medium text-stone-900 hover:border-amber-700 hover:text-amber-700"
+          className="rounded-xl bg-amber-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-amber-800"
         >
-          Write a review
+          Write a review →
         </Link>
-      </div>
+        <p className="text-[11px] uppercase tracking-[0.2em] text-stone-400">
+          Next.js · Neon · Vercel
+        </p>
+      </footer>
     </main>
   );
 }

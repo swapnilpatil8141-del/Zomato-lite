@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Zomato Lite",
-  description: "Write a review of Ludhiana Burrito, or read what others said.",
+  title: "Ludhiana Burrito · Zomato Lite",
+  description:
+    "Write a review of Ludhiana Burrito, or read the room — a tiny real product showing how frontend, backend, database and deploy fit together.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
